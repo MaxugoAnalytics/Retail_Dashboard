@@ -12,7 +12,6 @@ import os
 Create a file uploader
 uploaded_file = st.file_uploader("Choose an Excel file", type="xlsx")
 
-Load the uploaded file into a Pandas dataframe
 if uploaded_file is not None:
     df_cleaned = pd.read_excel(uploaded_file)
 
