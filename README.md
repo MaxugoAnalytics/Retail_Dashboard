@@ -17,6 +17,6 @@ This project presents an interactive **Retail Analysis Dashboard** designed to a
 - **Languages:** Python  
 - **Libraries:** Pandas, Plotly, Streamlit  
 - **Visualization:** Choropleth maps, bar and line charts  
-- **Deployment:** [Hugging Face Spaces](https://huggingface.co/spaces/Nalytics/Retail_Analysis_Dashboard)  
+- **Deployement: Click any of this link to Visualize the Project** [Hugging Face Spaces](https://huggingface.co/spaces/Nalytics/Retail_Analysis_Dashboard)  
                   [Streamlit](https://retaildashboard-wppmr3tbenu5zun2opjrh9.streamlit.app/)
   
