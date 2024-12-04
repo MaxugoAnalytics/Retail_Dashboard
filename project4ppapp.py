@@ -7,16 +7,18 @@ import matplotlib.pyplot as plt
 import pydeck as pdk
 import warnings
 warnings.filterwarnings('ignore')
-import os
 
-Create a file uploader
-uploaded_file = st.file_uploader("Choose an Excel file", type="xlsx")
+# Title
+st.title("Analytics Retail Dashboard by Maxwell Adigwe")
 
-if uploaded_file is not None:
+# File uploader
+uploaded_file = st.file_uploader("Upload an Excel file (Adidas.xlsx)", type="xlsx")
+
+if uploaded_file:
+    # Load the dataset
     df_cleaned = pd.read_excel(uploaded_file)
 
     # Sidebar for filters
-    st.title("Nalytics Retail Dashboard by Maxwell Adigwe")
     st.sidebar.header("Filters")
     product = st.sidebar.multiselect("Select Product", options=df_cleaned["Product"].unique(), default=df_cleaned["Product"].unique())
     state = st.sidebar.multiselect("Select State", options=df_cleaned["State"].unique(), default=df_cleaned["State"].unique())
@@ -48,31 +50,30 @@ if uploaded_file is not None:
     st.subheader("Sales and Profit Analytical Trends")
     st.subheader("Sales Trends")
     st.line_chart(sales_trends.set_index("InvoiceDate"), use_container_width=True)
+
     st.subheader("Profit Trends")
     st.line_chart(profit_trends.set_index("InvoiceDate"), use_container_width=True)
 
     # Yearly Sales vs Profit Comparison
-    yearly_comparison = pd.DataFrame({"Year": sales_trends.index, "Total Sales": sales_trends["Total Sales"], "Operating Profit": profit_trends["Operating Profit"]})
+    yearly_comparison = df_cleaned.groupby("Year")[["TotalSales", "OperatingProfit"]].sum().reset_index()
+    yearly_comparison.columns = ["Year", "Total Sales", "Operating Profit"]
     st.subheader("Yearly Sales vs. Profit Comparison")
-    # Fixing the color error: Providing colors for each column
-    colors = ['#00FF00', '#FF0000']  # Green for 'Total Sales', Red for 'Operating Profit'
-    st.bar_chart(yearly_comparison.set_index("Year"), color=colors)
+    st.bar_chart(yearly_comparison.set_index("Year"))
 
     # Sales by Method
     sales_method = df_cleaned.groupby("SalesMethod")["TotalSales"].sum().reset_index()
     st.subheader("Sales by Method")
-    st.bar_chart(sales_method.set_index("SalesMethod"), color='#00FF00')
+    st.bar_chart(sales_method.set_index("SalesMethod"))
 
-    # Use a single color code
     # Top Selling Products
     top_products = df_cleaned.groupby("Product")["TotalSales"].sum().nlargest(5).reset_index()
     st.subheader("Top 5 Selling Products")
-    st.bar_chart(top_products.set_index("Product"), color='#00FF00')
+    st.bar_chart(top_products.set_index("Product"))
 
     # Regional Sales Distribution
     regional_sales = df_cleaned.groupby("Region")["TotalSales"].sum().reset_index()
     st.subheader("Regional Sales Distribution")
-    st.bar_chart(regional_sales.set_index("Region"), color='#00FF00')
+    st.bar_chart(regional_sales.set_index("Region"))
 
     # Monthly Sales Trends
     monthly_sales = df_cleaned.groupby("Month")["TotalSales"].sum().reset_index()
@@ -84,3 +85,40 @@ if uploaded_file is not None:
     yearly_profit_margin = df_cleaned.groupby("Year")["ProfitMargin"].mean().reset_index()
     st.subheader("Yearly Profit Margin Trends")
     st.line_chart(yearly_profit_margin.set_index("Year"), use_container_width=True)
+
+    # Add a 'State Code' column for choropleth maps (example for sales by state)
+    state_to_code = {
+        "New York": "NY", "Texas": "TX", "California": "CA", "Illinois": "IL", "Pennsylvania": "PA",
+        "Nevada": "NV", "Colorado": "CO", "Washington": "WA", "Florida": "FL", "Minnesota": "MN",
+        "Montana": "MT", "Tennessee": "TN", "Nebraska": "NE", "Alabama": "AL", "Maine": "ME",
+        "Alaska": "AK", "Hawaii": "HI", "Wyoming": "WY", "Virginia": "VA", "Michigan": "MI",
+        "Missouri": "MO", "Utah": "UT", "Oregon": "OR", "Louisiana": "LA", "Idaho": "ID",
+        "Arizona": "AZ", "New Mexico": "NM", "Georgia": "GA", "South Carolina": "SC",
+        "North Carolina": "NC", "Ohio": "OH", "Kentucky": "KY"
+    }
+
+    df_cleaned['StateCode'] = df_cleaned['State'].map(state_to_code)
+
+    # Plot the map for Total Sales by State
+    fig_sales_state = px.choropleth(df_cleaned, 
+                                    locations='StateCode', 
+                                    color='TotalSales',
+                                    hover_name='State', 
+                                    color_continuous_scale="Viridis",
+                                    labels={'TotalSales': 'Total Sales ($)'}, 
+                                    title='Sales by State in the USA')
+    st.plotly_chart(fig_sales_state)
+
+    # Plot the map for Profit by State
+    fig_profit_state = px.choropleth(df_cleaned, 
+                                     locations='StateCode', 
+                                     color='OperatingProfit',
+                                     hover_name='State', 
+                                     color_continuous_scale="Plasma",
+                                     labels={'OperatingProfit': 'Operating Profit ($)'}, 
+                                     title='Profit by State in the USA')
+    st.plotly_chart(fig_profit_state)
+    
+else:
+    st.warning("Please upload an Excel file to proceed.")
+
