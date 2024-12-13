@@ -60,9 +60,9 @@ with col3:
     st.line_chart(yearly_profit_margin.set_index("Year"), use_container_width=True)
 
 with col4:
-    st.subheader("Hourly Sales Trends")
-    hourly_sales = df_cleaned.groupby("Hour")["TotalSales"].sum().reset_index()
-    st.line_chart(hourly_sales.set_index("Hour"), use_container_width=True)
+    st.subheader("Daily Sales Trends")
+    daily_sales = df_cleaned.groupby("Day")["TotalSales"].sum().reset_index()
+    st.line_chartdaily_sales.set_index("Day"), use_container_width=True)
 
 # Second Row: Four More Visualizations
 st.markdown("### Additional Insights")
