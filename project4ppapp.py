@@ -7,21 +7,11 @@ warnings.filterwarnings('ignore')
 
 st.title("Interactive Retail Dashboard by Maxwell Adigwe")
 
+# Load data
 url = "https://raw.githubusercontent.com/AbhisheakSaraswat/PythonStreamlit/main/Adidas.xlsx"
 df_cleaned = pd.read_excel(url)
 
-st.sidebar.header("Filters")
-
-# Multiselect for Product, Region, State, and City
-product = st.sidebar.multiselect("Select Product", options=df_cleaned["Product"].unique(), default=df_cleaned["Product"].unique())
-region = st.sidebar.multiselect("Select Region", options=df_cleaned["Region"].unique(), default=df_cleaned["Region"].unique())
-state = st.sidebar.multiselect("Select State", options=df_cleaned["State"].unique(), default=df_cleaned["State"].unique())
-city = st.sidebar.multiselect("Select City", options=df_cleaned["City"].unique(), default=df_cleaned["City"].unique())
-
-# Apply filters based on selected multiselect values
-df_cleaned = df_cleaned[(df_cleaned["Region"].isin(region)) & (df_cleaned["State"].isin(state)) & 
-                        (df_cleaned["Product"].isin(product)) & (df_cleaned["City"].isin(city))]
-
+# Preprocess data
 df_cleaned['InvoiceDate'] = pd.to_datetime(df_cleaned['InvoiceDate'])
 df_cleaned['Year'] = df_cleaned['InvoiceDate'].dt.year
 df_cleaned['Month'] = df_cleaned['InvoiceDate'].dt.month
@@ -41,72 +31,126 @@ with col2:
     total_profit = df_cleaned["OperatingProfit"].sum()
     st.metric("Operating Profit ($)", f"${total_profit:,.2f}")
 
+# Second Row: Visualizations with filters
 col3, col4, col5, col6, col7 = st.columns(5)
 
 with col3:
     # Sales by Method
-    sales_method = df_cleaned.groupby("SalesMethod")["TotalSales"].sum().reset_index()
     st.subheader("Sales by Method")
+    method_filter = st.multiselect(
+        "Filter by Sales Method", 
+        options=df_cleaned["SalesMethod"].unique(),
+        default=df_cleaned["SalesMethod"].unique(),
+        key="method_filter"
+    )
+    filtered_method = df_cleaned[df_cleaned["SalesMethod"].isin(method_filter)]
+    sales_method = filtered_method.groupby("SalesMethod")["TotalSales"].sum().reset_index()
     st.bar_chart(sales_method.set_index("SalesMethod"))
 
 with col4:
     # Yearly Sales vs Profit Comparison
-    yearly_comparison = df_cleaned.groupby("Year")[["TotalSales", "OperatingProfit"]].sum().reset_index()
-    yearly_comparison.columns = ["Year", "Total Sales", "Operating Profit"]
-    st.subheader("Yearly Sales vs. Profit Comparison")
+    st.subheader("Yearly Sales vs Profit")
+    year_filter = st.multiselect(
+        "Filter by Year",
+        options=df_cleaned["Year"].unique(),
+        default=df_cleaned["Year"].unique(),
+        key="year_filter"
+    )
+    filtered_year = df_cleaned[df_cleaned["Year"].isin(year_filter)]
+    yearly_comparison = filtered_year.groupby("Year")[["TotalSales", "OperatingProfit"]].sum().reset_index()
     st.bar_chart(yearly_comparison.set_index("Year"))
 
 with col5:
     # Profit Margin Trends
-    df_cleaned["ProfitMargin"] = (df_cleaned["OperatingProfit"] / df_cleaned["TotalSales"]) * 100
-    yearly_profit_margin = df_cleaned.groupby("Year")["ProfitMargin"].mean().reset_index()
     st.subheader("Yearly Profit Margin Trends")
+    product_filter = st.multiselect(
+        "Filter by Product",
+        options=df_cleaned["Product"].unique(),
+        default=df_cleaned["Product"].unique(),
+        key="product_filter"
+    )
+    filtered_product = df_cleaned[df_cleaned["Product"].isin(product_filter)]
+    filtered_product["ProfitMargin"] = (
+        filtered_product["OperatingProfit"] / filtered_product["TotalSales"]
+    ) * 100
+    yearly_profit_margin = filtered_product.groupby("Year")["ProfitMargin"].mean().reset_index()
     st.line_chart(yearly_profit_margin.set_index("Year"), use_container_width=True)
 
 with col6:
     # Regional Sales Distribution
-    regional_sales = df_cleaned.groupby("Region")["TotalSales"].sum().reset_index()
     st.subheader("Regional Sales Distribution")
+    region_filter = st.multiselect(
+        "Filter by Region",
+        options=df_cleaned["Region"].unique(),
+        default=df_cleaned["Region"].unique(),
+        key="region_filter"
+    )
+    filtered_region = df_cleaned[df_cleaned["Region"].isin(region_filter)]
+    regional_sales = filtered_region.groupby("Region")["TotalSales"].sum().reset_index()
     st.bar_chart(regional_sales.set_index("Region"))
 
 with col7:
     # Top Selling Products
-    top_products = df_cleaned.groupby("Product")["TotalSales"].sum().nlargest(5).reset_index()
     st.subheader("Top 5 Selling Products")
+    state_filter = st.multiselect(
+        "Filter by State",
+        options=df_cleaned["State"].unique(),
+        default=df_cleaned["State"].unique(),
+        key="state_filter"
+    )
+    filtered_state = df_cleaned[df_cleaned["State"].isin(state_filter)]
+    top_products = filtered_state.groupby("Product")["TotalSales"].sum().nlargest(5).reset_index()
     st.bar_chart(top_products.set_index("Product"))
 
-# Second Row: Visuals (5 columns)
+# Third Row: Additional Visualizations with Filters
 col8, col9, col10, col11, col12 = st.columns(5)
 
 with col8:
     # Sales vs Operating Profit Scatter Plot
     st.subheader("Sales vs Operating Profit")
-    fig_sales_profit = px.scatter(df_cleaned, x="TotalSales", y="OperatingProfit", color="Product", 
-                                  title="Sales vs Operating Profit", template="plotly_dark")
+    sales_profit_filter = st.multiselect(
+        "Filter by City",
+        options=df_cleaned["City"].unique(),
+        default=df_cleaned["City"].unique(),
+        key="sales_profit_filter"
+    )
+    filtered_city = df_cleaned[df_cleaned["City"].isin(sales_profit_filter)]
+    fig_sales_profit = px.scatter(
+        filtered_city, 
+        x="TotalSales", 
+        y="OperatingProfit", 
+        color="Product", 
+        template="plotly_dark"
+    )
     st.plotly_chart(fig_sales_profit)
 
 with col9:
     # Monthly Sales Trends
     st.subheader("Monthly Sales Trends")
-    monthly_sales = df_cleaned.groupby("Month")["TotalSales"].sum().reset_index()
+    monthly_sales = filtered_city.groupby("Month")["TotalSales"].sum().reset_index()
     st.line_chart(monthly_sales.set_index("Month"), use_container_width=True)
 
 with col10:
     # Profit Margin Distribution
     st.subheader("Profit Margin Distribution")
-    st.write("A histogram to visualize the distribution of profit margins.")
-    st.bar_chart(df_cleaned["ProfitMargin"])
+    st.bar_chart(filtered_city["ProfitMargin"])
 
 with col11:
     # Profit vs Sales by Region (Scatter Plot)
     st.subheader("Profit vs Sales by Region")
-    fig_profit_sales_region = px.scatter(df_cleaned, x="TotalSales", y="OperatingProfit", color="Region", 
-                                         title="Profit vs Sales by Region", template="plotly_dark")
+    fig_profit_sales_region = px.scatter(
+        filtered_city, 
+        x="TotalSales", 
+        y="OperatingProfit", 
+        color="Region", 
+        template="plotly_dark"
+    )
     st.plotly_chart(fig_profit_sales_region)
 
 with col12:
     # Daily Sales Trends
     st.subheader("Daily Sales Trends")
-    daily_sales = df_cleaned.groupby("Day")["TotalSales"].sum().reset_index()
+    daily_sales = filtered_city.groupby("Day")["TotalSales"].sum().reset_index()
     st.line_chart(daily_sales.set_index("Day"), use_container_width=True)
+
 
