@@ -5,6 +5,9 @@ import warnings
 
 warnings.filterwarnings('ignore')
 
+# Set the page configuration for full-width layout
+st.set_page_config(page_title="Retail Dashboard", layout="wide")
+
 st.title("Interactive Retail Dashboard by Maxwell Adigwe")
 
 # Load data
@@ -26,6 +29,7 @@ def apply_filter(options, selected):
     return selected
 
 # First Row: Four Visualizations
+st.markdown("### Key Metrics and Trends")
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
@@ -35,7 +39,7 @@ with col1:
         method_filter = st.multiselect("Select Methods", method_options, default="All")
     filtered_method = df_cleaned[df_cleaned["SalesMethod"].isin(apply_filter(method_options, method_filter))]
     sales_method = filtered_method.groupby("SalesMethod")["TotalSales"].sum().reset_index()
-    st.bar_chart(sales_method.set_index("SalesMethod"))
+    st.bar_chart(sales_method.set_index("SalesMethod"), use_container_width=True)
 
 with col2:
     st.subheader("Yearly Sales vs Profit")
@@ -44,7 +48,7 @@ with col2:
         year_filter = st.multiselect("Select Years", year_options, default="All")
     filtered_year = df_cleaned[df_cleaned["Year"].isin(apply_filter(year_options, year_filter))]
     yearly_comparison = filtered_year.groupby("Year")[["TotalSales", "OperatingProfit"]].sum().reset_index()
-    st.bar_chart(yearly_comparison.set_index("Year"))
+    st.bar_chart(yearly_comparison.set_index("Year"), use_container_width=True)
 
 with col3:
     st.subheader("Yearly Profit Margin Trends")
@@ -61,6 +65,7 @@ with col4:
     st.line_chart(hourly_sales.set_index("Hour"), use_container_width=True)
 
 # Second Row: Four More Visualizations
+st.markdown("### Additional Insights")
 col5, col6, col7, col8 = st.columns(4)
 
 with col5:
@@ -70,7 +75,7 @@ with col5:
         region_filter = st.multiselect("Select Regions", region_options, default="All")
     filtered_region = df_cleaned[df_cleaned["Region"].isin(apply_filter(region_options, region_filter))]
     regional_sales = filtered_region.groupby("Region")["TotalSales"].sum().reset_index()
-    st.bar_chart(regional_sales.set_index("Region"))
+    st.bar_chart(regional_sales.set_index("Region"), use_container_width=True)
 
 with col6:
     st.subheader("Top Selling Products")
@@ -79,12 +84,12 @@ with col6:
         state_filter = st.multiselect("Select States", state_options, default="All")
     filtered_state = df_cleaned[df_cleaned["State"].isin(apply_filter(state_options, state_filter))]
     top_products = filtered_state.groupby("Product")["TotalSales"].sum().nlargest(5).reset_index()
-    st.bar_chart(top_products.set_index("Product"))
+    st.bar_chart(top_products.set_index("Product"), use_container_width=True)
 
 with col7:
     st.subheader("Top Selling States")
     top_states = df_cleaned.groupby("State")["TotalSales"].sum().nlargest(5).reset_index()
-    st.bar_chart(top_states.set_index("State"))
+    st.bar_chart(top_states.set_index("State"), use_container_width=True)
 
 with col8:
     st.subheader("Profit vs Sales by Region")
@@ -95,4 +100,5 @@ with col8:
         color="Region", 
         template="plotly_dark"
     )
-    st.plotly_chart(fig_profit_sales_region)
+    st.plotly_chart(fig_profit_sales_region, use_container_width=True)
+
