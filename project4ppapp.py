@@ -62,7 +62,7 @@ with col3:
 with col4:
     st.subheader("Daily Sales Trends")
     daily_sales = df_cleaned.groupby("Day")["TotalSales"].sum().reset_index()
-    st.line_chartdaily_sales.set_index("Day"), use_container_width=True)
+    st.line_chart(daily_sales.set_index("Day"), use_container_width=True)
 
 # Second Row: Four More Visualizations
 st.markdown("### Additional Insights")
